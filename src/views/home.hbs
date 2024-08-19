@@ -1,0 +1,35 @@
+<div class="container">
+    <div class="circle mt-4" id="changePass"
+         onclick=openDoor()>Open the fucking door</div>
+    <div class="mt-4 me-3 ms-3">
+        <div class="row">
+            <button id="changeButton" type="button" class="btn btn-primary col" onclick=change()>Chuyển chế độ</button>
+            <label id="labelMode" name="labelMode" class="labelMode col" style="display: flex; justify-content: center; align-self: center">{{label}}</label>
+        </div>
+        <div class="row mt-4">
+            <label for="" class="col-4"> Đổi mật khẩu</label>
+            <div class="col-8 line"></div>
+        </div>
+        <div class="row mt-4">
+            <button class="col-4 btn btn-primary" onclick=showPassword()>Hiện</button>
+            <div class="col-2"></div>
+            <div class="col-6">
+                <label for="" style="display: flex" id="password">Mật khẩu hiện tại</label>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <input type="text" id="inputPassword">
+        </div>
+        <div class="row mt-4">
+            <button type="button" class="btn btn-primary col" onclick=changePassword()>Đổi pass</button>
+        </div>
+        <div class="row mt-4">
+            <label for="" class="col-2">Log</label>
+            <div class="col-10 line"></div>
+        </div>
+        <div class="row mt-4">
+            <textarea name="" id="" cols="30" rows="4" disabled></textarea>
+        </div>
+    </div>
+
+</div>
