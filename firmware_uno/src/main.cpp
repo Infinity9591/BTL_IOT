@@ -5,32 +5,36 @@
 #include <Servo.h>
 #include "pitch.h"
 
-#define TX_PIN 1
-#define RX_PIN 0
+#define TX_PIN 13
+#define RX_PIN 12
 SoftwareSerial mySerial(RX_PIN, TX_PIN); // khai báo mở cổng serial mềm
 
-#define ledPin 12          // chân đèn
-#define tripwirePin A3     // chân tripwire
-#define btnOpenPin A5      // chân công tắc báo hiệu mở cửa
+#define ledPin     A3   // chân đèn
+// #define buzzerPin 3        // chân buzzer
+// #define tripwirePin A3     // chân tripwire
+
+#define btnOpenPin A2    // chân công tắc báo hiệu mở cửa
 #define btnClosePin A1     // chân công tắc báo hiệu đóng cửa
 #define servoPin A0        // chân servo
-#define buzzerPin 3        // chân buzzer
-#define buttonManualPin 13 // chân nút mở cửa thủ công
+
+#define buttonManualPin 3 // chân nút mở cửa thủ công
 #define buttonSwitchPin 2  // chân nút chuyển chế độ
 
 // lệnh lấy từ/gửi lên esp8266
 String get;
-String set;
-char mode = '1'; // chế độ manual/auto
-char open;       // check cửa mở
+String setMode;
+String setOpen;
+
+char mode = '0'; // chế độ manual/auto
+char open = '0'; // check cửa mở
 
 Servo myservo;
-int tripwireState;
+// int tripwireState;
 int isDoorOpen = 0;
 int pirInput;
 int servoPosition = 120;
 int degree = 0;
-int closeDegree = -2;
+int closeDegree = -3;
 int openDegree = 3;
 int btnOpenState;
 int btnCloseState;
@@ -50,7 +54,8 @@ Keypad keypad = Keypad(makeKeymap(keys), pin_rows, pin_column, ROW_NUM, COLUMN_N
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 int cursorColumn = 0;
 String pass = "";
-String mk = "123456";
+// String mk = "123456";
+String mk = "";
 int len = 6;
 
 void millisDelay(long int delayTime)
@@ -60,22 +65,22 @@ void millisDelay(long int delayTime)
         ;
 }
 
-void bussss()
-{
-    int i = 0;
-    while (true)
-    {
-        int noteDuration = 1000 / noteDurations[i];
-        tone(buzzerPin, melody[i], noteDuration);
-        i += 1;
-        int pauseBetweenNotes = noteDuration * 1.30;
-        millisDelay(pauseBetweenNotes);
-        if (i == 9)
-        {
-            break;
-        }
-    }
-}
+// void bussss()
+// {
+//     int i = 0;
+//     while (true)
+//     {
+//         int noteDuration = 1000 / noteDurations[i];
+//         tone(buzzerPin, melody[i], noteDuration);
+//         i += 1;
+//         int pauseBetweenNotes = noteDuration * 1.30;
+//         millisDelay(pauseBetweenNotes);
+//         if (i == 9)
+//         {
+//             break;
+//         }
+//     }
+// }
 
 void servoSweep()
 {
@@ -131,16 +136,18 @@ void control()
         if (mode == '0')
         {
             mode = '1';
-            set = "MODE_" + String(mode);
+            setMode = "MODE_" + String(mode);
             // digitalWrite(ledChangeModePin, LOW);
-            mySerial.print(set);
+            mySerial.print(setMode);
+            Serial.println(setMode);
         }
         else if (mode == '1')
         {
             mode = '0';
-            set = "MODE_" + String(mode);
+            setMode = "MODE_" + String(mode);
             // digitalWrite(ledChangeModePin, HIGH);
-            mySerial.print(set);
+            mySerial.print(setMode);
+            Serial.println(setMode);
         }
     }
 }
@@ -152,16 +159,15 @@ void setup()
     lcd.init();
     myservo.attach(servoPin);
     pinMode(ledPin, OUTPUT);
-    pinMode(buttonSwitchPin, INPUT);
-    attachInterrupt(0, control, FALLING);
+    pinMode(buttonSwitchPin, INPUT_PULLUP);
+    attachInterrupt(0, control, RISING);
     pinMode(btnOpenPin, INPUT_PULLUP);
     pinMode(btnClosePin, INPUT_PULLUP);
-    pinMode(tripwirePin, INPUT);
+    // pinMode(tripwirePin, INPUT);
     pinMode(buttonManualPin, INPUT_PULLUP);
-    Serial.begin(9600);
     openDoor();
     millisDelay(1000);
-    bussss();
+    // bussss();
     closeDoor();
 }
 
@@ -171,33 +177,44 @@ void loop()
     {
         String command;
         get = mySerial.readString();
+        get.trim();
+        // Serial.println(get);
+        if (get.startsWith("PASS_"))
+        {
+            command = get.substring(5);
+            command.trim();
+            if (mk != command)
+                mk = command;
+            Serial.println("PASS_" + String(mk));
+        }
         if (get.startsWith("MODE_"))
         {
             command = get.substring(5);
             if (command[0] != (mode))
             {
                 mode = command[0];
+                Serial.println("MODE_" + String(mode));
             }
         }
-        if (get.startsWith("OPEN_"))
+        if (get.startsWith("OPEN_") && mode == '1')
         {
             command = get.substring(5);
+            // command.trim();
             // Serial.println(command);
-            if (command[0] != (open))
+            if (command[0] != open)
             {
                 open = command[0];
                 if (open == '1')
                 {
-                    // Serial.println("Open");
                     isDoorOpen = 1;
                     openDoor();
                     millisDelay(3000);
-                    // bussss();
                     closeDoor();
                     isDoorOpen = 0;
                     open = '0';
-                    set = "OPEN_" + String(open);
-                    mySerial.print(set);
+                    setOpen = "OPEN_" + String(open);
+                    mySerial.print(setOpen);
+                    Serial.print(setOpen);
                     millisDelay(500);
                 }
             }
@@ -321,7 +338,7 @@ void loop()
                     isDoorOpen = 1;
                     openDoor();
                     millisDelay(3000);
-                    bussss();
+                    // bussss();
                     closeDoor();
                     pass = "";
                     millisDelay(500);
@@ -346,7 +363,7 @@ void loop()
             isDoorOpen = 1;
             openDoor();
             millisDelay(1000);
-            bussss();
+            // bussss();
             closeDoor();
             millisDelay(500);
             isDoorOpen = 0;

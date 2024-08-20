@@ -13,9 +13,12 @@ const char *ssid = "I_want_to_end_my_life_ver_laptop";
 const char *password = "lifeissosuck.";
 String url = "http://192.168.1.4:4001";
 
-unsigned char modeCharacter = '0';
+unsigned char modeCharacter = '1';
 unsigned char openCharacter = '0';
+String pass;
 String temp;
+String temp1;
+String temp2;
 
 void getDataModeFromServer(const String &url)
 {
@@ -26,7 +29,6 @@ void getDataModeFromServer(const String &url)
         HTTPClient http;
         http.begin(client, url);
         int httpCode = http.GET();
-        // Serial.println(httpCode);
         if (httpCode > 0)
         {
             JsonDocument doc;
@@ -35,12 +37,11 @@ void getDataModeFromServer(const String &url)
             if (temp.startsWith("MODE_"))
             {
                 command = temp.substring(5)[0];
-                // Serial.println(command);
                 if (command[0] - 48 != modeCharacter)
                 {
                     modeCharacter = (command[0] - 48);
                     mySerial.print(("MODE_" + String(modeCharacter)));
-                    // Serial.println(("MODE_" + String(modeCharacter)));
+                    Serial.println(("MODE_" + String(modeCharacter)));
                 }
             }
         }
@@ -75,11 +76,9 @@ void sendDataModeToServer(const String &url, String commandFromUno)
             jsonData += (modeCharacter);
             jsonData += "\"}";
             http.POST(jsonData);
-            // Serial.println(jsonData);
-            Serial.println(modeCharacter);
+            Serial.println(jsonData);
         }
     }
-    // Serial.println(command);
 }
 
 void openDoorFromServer(const String &url)
@@ -97,16 +96,17 @@ void openDoorFromServer(const String &url)
 
             JsonDocument doc;
             deserializeJson(doc, http.getString());
-            temp = doc["command"].as<String>();
-            // Serial.println(temp);
-            if (temp.startsWith("OPEN_"))
+            temp1 = doc["command"].as<String>();
+            temp1.trim();
+            if (temp1.startsWith("OPEN_"))
             {
-                command = temp.substring(5);
-                if (command[0] - 48 != '0')
+                command = temp1.substring(5);
+                command.trim();
+                if (command[0] - 48 != openCharacter)
                 {
-                    // openCharacter = (command[0] - 48);
-                    mySerial.print(("OPEN_1"));
-                    Serial.println(("OPEN_1"));
+                    openCharacter = (command[0] - 48);
+                    mySerial.print(("OPEN_" + String(openCharacter)));
+                    Serial.println(("OPEN_" + String(openCharacter)));
                 }
             }
         }
@@ -126,12 +126,12 @@ void openDoorFromServer(const String &url)
 void setDoorClosingToServer(const String &url, String commandFromUno)
 {
     String command;
-    temp = commandFromUno;
-    command = temp.substring(5);
-    // Serial.println(temp);
-    if (command[0] != openCharacter)
+    temp1 = commandFromUno;
+    command = temp1.substring(5);
+    command.trim();
+    if (command[0] - 48 != openCharacter)
     {
-        openCharacter = command[0];
+        openCharacter = command[0] - 48;
         if (WiFi.status() == WL_CONNECTED)
         {
             WiFiClient client;
@@ -139,11 +139,51 @@ void setDoorClosingToServer(const String &url, String commandFromUno)
             http.begin(client, url);
             http.addHeader("Content-Type", "application/json");
             String jsonData = "{\"open\":\"";
-            jsonData += (openCharacter - 48);
+            jsonData += String(openCharacter);
             jsonData += "\"}";
             http.POST(jsonData);
-            // Serial.println(modeCharacter);
+            Serial.println(jsonData);
         }
+    }
+}
+
+void getPasswordFromServer(const String &url)
+{
+    String command;
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        WiFiClient client;
+        HTTPClient http;
+        http.begin(client, url);
+        int httpCode = http.GET();
+
+        if (httpCode > 0)
+        {
+
+            JsonDocument doc;
+            deserializeJson(doc, http.getString());
+            temp2 = doc["command"].as<String>();
+            if (temp2.startsWith("PASS_"))
+            {
+                command = temp2.substring(5);
+                command.trim();
+                if (command != pass)
+                {
+                    mySerial.print(("PASS_" + command));
+                    Serial.print(("PASS_" + command));
+                }
+            }
+        }
+        else
+        {
+            Serial.println("Error on HTTP request");
+        }
+
+        http.end();
+    }
+    else
+    {
+        Serial.println("WiFi not connected");
     }
 }
 
@@ -168,11 +208,13 @@ void setup()
 }
 void loop()
 {
+    // getPasswordFromServer(url + "/pass");
     getDataModeFromServer(url + "/changemode");
     openDoorFromServer(url + "/open");
     if (mySerial.available())
     {
         String command = mySerial.readString();
+        command.trim();
         if (command.startsWith("MODE_"))
         {
             sendDataModeToServer(url + "/changemode", command);

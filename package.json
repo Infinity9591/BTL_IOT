@@ -11,7 +11,8 @@
   "description": "",
   "dependencies": {
     "express": "^4.19.2",
-    "express-handlebars": "^7.1.2"
+    "express-handlebars": "^7.1.2",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
     "morgan": "^1.10.0",

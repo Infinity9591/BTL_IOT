@@ -45,13 +45,15 @@ app.get('/changemode', (req, res) => {
 })
 
 app.post('/open', (req, res) => {
-    open = req.body.open;
+    if (mode === '1'){
+        open = req.body.open;
+    }
     console.log("OPEN" + open);
     res.json({open : open});
 })
 
 app.get('/open', (req, res) => {
-    let command = "OPEN_" + (open);
+    const command = "OPEN_" + open;
     res.json({open : open, command : command});
 })
 
