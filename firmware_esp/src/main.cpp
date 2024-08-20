@@ -169,6 +169,7 @@ void getPasswordFromServer(const String &url)
                 command.trim();
                 if (command != pass)
                 {
+                    pass = command;
                     mySerial.print(("PASS_" + command));
                     Serial.print(("PASS_" + command));
                 }
@@ -208,7 +209,7 @@ void setup()
 }
 void loop()
 {
-    // getPasswordFromServer(url + "/pass");
+    getPasswordFromServer(url + "/pass");
     getDataModeFromServer(url + "/changemode");
     openDoorFromServer(url + "/open");
     if (mySerial.available())
