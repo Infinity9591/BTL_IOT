@@ -9,16 +9,16 @@
 #define RX_PIN 12
 SoftwareSerial mySerial(RX_PIN, TX_PIN); // khai báo mở cổng serial mềm
 
-#define ledPin     A3   // chân đèn
+#define ledPin A3 // chân đèn
 // #define buzzerPin 3        // chân buzzer
 // #define tripwirePin A3     // chân tripwire
 
-#define btnOpenPin A2    // chân công tắc báo hiệu mở cửa
-#define btnClosePin A1     // chân công tắc báo hiệu đóng cửa
-#define servoPin A0        // chân servo
+#define btnOpenPin A2  // chân công tắc báo hiệu mở cửa
+#define btnClosePin A1 // chân công tắc báo hiệu đóng cửa
+#define servoPin A0    // chân servo
 
 #define buttonManualPin 3 // chân nút mở cửa thủ công
-#define buttonSwitchPin 2  // chân nút chuyển chế độ
+#define buttonSwitchPin 2 // chân nút chuyển chế độ
 
 // lệnh lấy từ/gửi lên esp8266
 String get;
@@ -27,6 +27,7 @@ String setOpen;
 
 char mode = '0'; // chế độ manual/auto
 char open = '0'; // check cửa mở
+String regconize;
 
 Servo myservo;
 // int tripwireState;
@@ -155,7 +156,6 @@ void control()
 void setup()
 {
     Serial.begin(9600);
-    mySerial.begin(9600);
     lcd.init();
     myservo.attach(servoPin);
     pinMode(ledPin, OUTPUT);
@@ -169,6 +169,7 @@ void setup()
     millisDelay(1000);
     // bussss();
     closeDoor();
+    mySerial.begin(9600);
 }
 
 void loop()
@@ -218,6 +219,32 @@ void loop()
                     millisDelay(500);
                 }
             }
+        }
+        if (get.startsWith("REGCONIZE_") && mode == '0')
+        {
+            command = get.substring(10);
+            if (command != regconize)
+            {
+                regconize = command;
+                Serial.println(regconize);
+                if (regconize == "openDoor")
+                {
+                    isDoorOpen = 1;
+                    openDoor();
+                    millisDelay(3000);
+                    closeDoor();
+                    isDoorOpen = 0;
+                    setOpen = "OPEN_" + String(open);
+                    Serial.print(get);
+                    millisDelay(500);
+                    regconize = "";
+                }
+                else if (regconize == "Unknown"){
+                    Serial.println(regconize);
+                    regconize = "";
+                }
+            }
+
         }
     }
 

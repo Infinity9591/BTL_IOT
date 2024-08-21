@@ -171,7 +171,7 @@ void getPasswordFromServer(const String &url)
                 {
                     pass = command;
                     mySerial.print(("PASS_" + command));
-                    Serial.print(("PASS_" + command));
+                    Serial.println(("PASS_" + command));
                 }
             }
         }
@@ -191,7 +191,6 @@ void getPasswordFromServer(const String &url)
 void setup()
 {
     Serial.begin(9600);
-    mySerial.begin(9600);
     Serial.print("Connecting to ");
     Serial.println(ssid);
     WiFi.mode(WIFI_STA);
@@ -206,6 +205,8 @@ void setup()
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+    pinMode(LED_BUILTIN, OUTPUT);
+    mySerial.begin(9600);
 }
 void loop()
 {
@@ -225,4 +226,14 @@ void loop()
             setDoorClosingToServer(url + "/open", command);
         }
     }
+    if (Serial.available()){
+        String command = Serial.readString();
+        command.trim();
+        if (command.startsWith("OPEN")){
+            command = command.substring(4);
+            mySerial.print("REGCONIZE_" + command);
+
+        }
+    }
+
 }
