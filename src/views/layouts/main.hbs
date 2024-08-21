@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
         .circle {
             width: 200px;
@@ -18,7 +20,8 @@
             margin: auto;
             line-height: 200px;
             text-align: center;
-            color: black;
+            color: white;
+            background-color: #90d9e6;
         }
 
         .line {
@@ -31,6 +34,7 @@
         let labelCommand;
         let openCommand;
         let passwordChange;
+        let st = 1;
         const change = async () => {
             let labelCharacter;
             let labelMode = document.getElementById('labelMode');
@@ -38,11 +42,12 @@
                     .then(response => response.json());
             if (labelCharacter.mode == '1') {
                 labelCommand = '0';
-                labelMode.innerText = "Auto";
+                labelMode.innerHTML = "<span style='color: green; font-weight: bold'>Auto</span>";
             }
             else if (labelCharacter.mode == '0') {
                 labelCommand = '1';
-                labelMode.innerText = "Manual";
+                labelMode.innerHTML = "<span style='color: red; font-weight: bold;'>Manual</span>";
+                
             }
             await fetch('/changemode', {
                 method: "POST",
@@ -72,6 +77,13 @@
             if (labelPassword.innerText === a.password){
                 labelPassword.innerText = "Mật khẩu hiện tại";
             } else labelPassword.innerText = a.password;
+            if (st == 1){
+                document.getElementById("showpassBtn").innerHTML = "Ẩn"
+                st = 0
+            }else {
+                document.getElementById("showpassBtn").innerHTML = "Hiện";
+                st = 1
+            }
         }
 
         const changePassword = async () => {
